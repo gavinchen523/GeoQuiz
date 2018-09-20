@@ -1,13 +1,26 @@
 package com.example.gavin.geoquiz;
 
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class QuizActivity extends AppCompatActivity {
+
+    //    code 3-1
+    private static final String TAG = "QuizActivity";
+    private static final String KEY_INDEX = "index";
+
+    //    code 5-13
+    private static final int REQUEST_CODE_CHEAT = 0;
+
     //    code 1-7
     private Button mTrueButton;
     private Button mfalseButton;
@@ -15,6 +28,12 @@ public class QuizActivity extends AppCompatActivity {
     //    code 2-6
     private Button mNextButton;
     private TextView mQuestionTextView;
+
+    //    code 5-6
+    private Button mCheatButton;
+
+    //    code 5-16
+    private boolean mIsCheater;
 
     private Question[] mQuestionBank = new Question[]{
             new Question(R.string.Q1, true),
@@ -29,6 +48,10 @@ public class QuizActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+//        code 3-2
+        Log.d(TAG, "onCreate(Bundle) called");
+
         setContentView(R.layout.activity_quiz);
 
 //        code 1-8
@@ -66,6 +89,8 @@ public class QuizActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+//                code 5-17
+                mIsCheater = false;
 //                code 2-9
                 updateQuestion();
                 /* remove gy code 2-9
@@ -74,8 +99,41 @@ public class QuizActivity extends AppCompatActivity {
             }
         });
 
+//        code 5-6
+        mCheatButton = (Button) findViewById(R.id.cheat_button);
+        mCheatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                        code 5-7, remove by code 5-10
+//                                Intent intent = new Intent(QuizActivity.this, CheatActivity.class);
+//                        code 5-10
+                boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
+                Intent intent = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
+
+//                remove by code 5-13
+//                startActivity(intent);
+//                code 5-13
+                startActivityForResult(intent, REQUEST_CODE_CHEAT);
+                ;
+            }
+        });
         updateQuestion();
 
+    }
+
+    //    code 5-16
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+        if (requestCode == REQUEST_CODE_CHEAT) {
+            if (data == null) {
+                return;
+            }
+            mIsCheater = CheatActivity.wasAnswerShown(data);
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     //    code 2-9
@@ -90,10 +148,15 @@ public class QuizActivity extends AppCompatActivity {
 
         int messageResId = 0;
 
-        if (userPressedTrue == answerIsTrue) {
-            messageResId = R.string.correct_toast;
+//        5-17
+        if (mIsCheater) {
+            messageResId = R.string.judgment_toast;
         } else {
-            messageResId = R.string.incorrect_toast;
+            if (userPressedTrue == answerIsTrue) {
+                messageResId = R.string.correct_toast;
+            } else {
+                messageResId = R.string.incorrect_toast;
+            }
         }
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
         ;
