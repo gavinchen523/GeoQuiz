@@ -1,11 +1,17 @@
 package com.example.gavin.geoquiz;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
+import android.graphics.drawable.Animatable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
+
+import java.lang.annotation.Annotation;
 
 public class CheatActivity extends AppCompatActivity {
 
@@ -53,6 +59,17 @@ public class CheatActivity extends AppCompatActivity {
                 }
 //                code 5-14
                 setAnswerShownResult(true);
+                int cx = mShowAnswerButton.getWidth()/2;
+                int cy = mShowAnswerButton.getHeight()/2;
+                float radius = mShowAnswerButton.getWidth();
+                Animator anim = ViewAnimationUtils.createCircularReveal(mShowAnswerButton, cx, cy, radius, 0);
+                anim.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation, boolean isReverse) {
+                        mShowAnswerButton.setVisibility(View.INVISIBLE);
+                    }
+                });
+                anim.start();
             }
         });
     }
